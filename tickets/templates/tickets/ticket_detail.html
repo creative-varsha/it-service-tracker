@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+ <h2>#{{ ticket.pk }} · {{ ticket.title }}</h2>
+ <p><span class="badge {{ ticket.status }}">{{ ticket.get_status_display }}</span>
+    <span class="badge {{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
+    <span class="badge">{{ ticket.category }}</span></p>
+ <p>{{ ticket.description|linebreaksbr }}</p>
+ <p class="muted">Raised by {{ ticket.created_by.username }} on {{ ticket.created_at|date:"d M Y, H:i" }}
+  · Assigned to: {{ ticket.assigned_to.username|default:"Unassigned" }}</p>
+ <form method="post" action="{% url 'ticket_toggle' ticket.pk %}">{% csrf_token %}
+  {% if ticket.status == 'closed' %}<button class="btn">Reopen ticket</button>
+  {% else %}<button class="btn danger">Close ticket</button>{% endif %}
+ </form>
+</div>
+
+{% if staff %}
+<div class="card">
+ <h3>Assign &amp; update status</h3>
+ <form method="post">{% csrf_token %}<input type="hidden" name="action" value="assign">
+  {{ assign_form.as_p }}<button class="btn sec">Save</button>
+ </form>
+</div>
+{% endif %}
+
+<div class="card">
+ <h3>Comments</h3>
+ {% for c in comments %}
+  <p><strong>{{ c.author.username }}</strong> <span class="muted">{{ c.created_at|date:"d M, H:i" }}</span><br>{{ c.body|linebreaksbr }}</p>
+ {% empty %}<p class="muted">No comments yet.</p>{% endfor %}
+ <form method="post">{% csrf_token %}<input type="hidden" name="action" value="comment">
+  {{ comment_form.as_p }}<button class="btn">Add comment</button>
+ </form>
+</div>
+{% endblock %}
